@@ -1,11 +1,19 @@
+# For preprocessing
 from pydub.utils import mediainfo
 import numpy as np
 import librosa
 import os
 
+# For training
+from torch.utils.data import TensorDataset, DataLoader
+import torch.nn as nn
+import torch.nn.functional as F
+import torch
+
 
 class DataModule:
-    def __init__(self, audio_dir_path):
+    def __init__(self, audio_dir_path, batch_size):
+        self.BATCH_SIZE = batch_size
         self.audio_count = 0
         self.audio_dir_path = audio_dir_path
         self.dir_list = os.listdir(self.audio_dir_path)
@@ -55,3 +63,12 @@ class DataModule:
         labels = np.array(labels)
 
         return features, features_norm, labels
+
+    def np_to_dataloader(self, x_data, y_data):
+        x_tensor = torch.Tensor(x_data)
+        y_tensor = torch.Tensor(y_data)
+
+        dataset = TensorDataset(x_tensor, y_tensor)
+        data_loader = DataLoader(dataset, batch_size=self.BATCH_SIZE, shuffle=True)
+
+        return data_loader
