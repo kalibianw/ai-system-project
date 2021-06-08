@@ -72,3 +72,163 @@ class DataModule:
         data_loader = DataLoader(dataset, batch_size=self.BATCH_SIZE, shuffle=True)
 
         return data_loader
+
+
+class FCNN(nn.Module):
+    def __init__(self, classes):
+        super(FCNN, self).__init__()
+        self.flatten = nn.Flatten()
+        self.input_layer = nn.Linear(
+            in_features=2560,
+            out_features=512
+        )
+        self.fcnn1 = nn.Linear(
+            in_features=512,
+            out_features=256,
+        )
+        self.fcnn2 = nn.Linear(
+            in_features=256,
+            out_features=128,
+        )
+        self.fcnn3 = nn.Linear(
+            in_features=128,
+            out_features=64,
+        )
+        self.output_layer = nn.Linear(
+            in_features=64,
+            out_features=classes
+        )
+
+        self.dropout = nn.Dropout()
+
+        nn.init.kaiming_normal_(self.input_layer)
+        nn.init.kaiming_normal_(self.fcnn1)
+        nn.init.kaiming_normal_(self.fcnn2)
+        nn.init.kaiming_normal_(self.fcnn3)
+        nn.init.kaiming_normal_(self.output_layer)
+
+    def forward(self, x):
+        x = self.flatten(x)
+
+        x = self.input_layer(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.fcnn1(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.fcnn2(x)
+        x = F.relu(x)
+
+        x = self.fcnn3(x)
+        x = F.relu(x)
+
+        x = self.output_layer(x)
+        x = F.softmax(x)
+
+        return x
+
+
+class CNN1D(nn.Module):
+    def __init__(self, input_channels, classes):
+        super(CNN1D, self).__init__()
+        self.input_layer = nn.Conv1d(in_channels=input_channels, out_channels=128, kernel_size=5)
+        self.conv1d_1 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=5)
+        self.conv1d_2 = nn.Conv1d(in_channels=256, out_channels=256, kernel_size=5)
+        self.conv1d_3 = nn.Conv1d(in_channels=256, out_channels=512, kernel_size=5)
+
+        self.fcnn1 = nn.Linear(in_features=5632, out_features=512)
+        self.fcnn2 = nn.Linear(in_features=512, out_features=256)
+        self.fcnn3 = nn.Linear(in_features=256, out_features=128)
+        self.output_layer = nn.Linear(in_features=128, out_features=classes)
+
+        self.dropout = nn.Dropout()
+        self.flatten = nn.Flatten()
+        self.max_pool_1d = nn.MaxPool1d(kernel_size=2)
+
+    def forward(self, x):
+        x = self.input_layer(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.max_pool_1d(x)
+
+        x = self.conv1d_1(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.conv1d_2(x)
+        x = F.relu(x)
+        x = self.max_pool_1d(x)
+
+        x = self.conv1d_3(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.flatten(x)
+
+        x = self.fcnn1(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.fcnn2(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.fcnn3(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.output_layer(x)
+        x = F.softmax(x)
+
+        return x
+
+
+class CNN2D(nn.Module):
+    def __init__(self, input_channels, classes):
+        super(CNN2D, self).__init__()
+        self.input_layer = nn.Conv1d(in_channels=input_channels, out_channels=64, kernel_size=(3, 3))
+        self.conv2d_1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3))
+        self.conv2d_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3, 3))
+        self.conv2d_3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3))
+
+        self.fcnn1 = nn.Linear(in_features=256 * 15 * 3, out_features=512)
+        self.fcnn2 = nn.Linear(in_features=512, out_features=256)
+        self.fcnn3 = nn.Linear(in_features=256, out_features=128)
+        self.output_layer = nn.Linear(in_features=128, out_features=classes)
+
+        self.dropout = nn.Dropout()
+        self.flatten = nn.Flatten()
+        self.max_pool_2d = nn.MaxPool2d(kernel_size=(2, 2))
+
+    def forward(self, x):
+        x = self.input_layer(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.max_pool_2d(x)
+
+        x = self.conv2d_1(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.conv2d_2(x)
+        x = F.relu(x)
+        x = self.max_pool_2d(x)
+
+        x = self.conv2d_3(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+
+        x = self.flatten(x)
+
+        x = self.fcnn1(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.fcnn2(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.fcnn3(x)
+        x = F.relu(x)
+        x = self.dropout(x)
+        x = self.output_layer(x)
+        x = F.softmax(x)
+
+        return x
