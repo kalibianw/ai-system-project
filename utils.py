@@ -9,6 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+import sys
 
 
 class DataModule:
@@ -18,14 +19,15 @@ class DataModule:
         self.audio_dir_path = audio_dir_path
         self.dir_list = os.listdir(self.audio_dir_path)
         self.each_audio_dir_path = list()
-        print("audio_dir_list")
-        for i in range(len(self.dir_list)):
-            print(audio_dir_path + self.dir_list[i] + "/")
-            self.each_audio_dir_path.append(audio_dir_path + self.dir_list[i] + "/")
-            audio_list = os.listdir(self.each_audio_dir_path[i])
-            self.audio_count += len(audio_list)
+        if audio_dir_path is not None:
+            print("audio_dir_list")
+            for i in range(len(self.dir_list)):
+                print(audio_dir_path + self.dir_list[i] + "/")
+                self.each_audio_dir_path.append(audio_dir_path + self.dir_list[i] + "/")
+                audio_list = os.listdir(self.each_audio_dir_path[i])
+                self.audio_count += len(audio_list)
 
-        print(f"total audio file: {self.audio_count}")
+            print(f"total audio file: {self.audio_count}")
 
     def audio_mfcc(self, n_mfcc):
         features = list()
@@ -65,8 +67,9 @@ class DataModule:
         return features, features_norm, labels
 
     def np_to_dataloader(self, x_data, y_data):
-        x_tensor = torch.Tensor(x_data)
-        y_tensor = torch.Tensor(y_data)
+        x_tensor = torch.tensor(x_data)
+        y_tensor = torch.tensor(y_data, dtype=torch.long)
+        # y_tensor = F.one_hot(y_tensor)
 
         dataset = TensorDataset(x_tensor, y_tensor)
         data_loader = DataLoader(dataset, batch_size=self.BATCH_SIZE, shuffle=True)
@@ -232,3 +235,75 @@ class CNN2D(nn.Module):
         x = F.softmax(x)
 
         return x
+
+
+class TrainModule:
+    def __init__(self, device, optimizer, loss, batch_size, reduce_lr_rate):
+        self.DEVICE = device
+        self.BATCH_SIZE = batch_size
+        self.optimizer = optimizer
+        self.criterion = loss
+        self.epoch = 0
+
+        self.last_val_loss = sys.maxsize
+        self.non_improve_cnt = 0
+
+        self.REDUCE_LR_RATE = reduce_lr_rate
+
+    def training(self, model, train_loader, valid_loader, log_interval):
+        model.train()
+        train_loss = 0.
+        correct = 0.
+
+        for batch_idx, (data, label) in enumerate(train_loader):
+            data = data.to(self.DEVICE)
+            label = label.to(self.DEVICE)
+            self.optimizer.zero_grad()
+            output = model(data)
+            loss = self.criterion(output, label)
+            loss.backward()
+            self.optimizer.step()
+
+            if batch_idx % log_interval == 0:
+                print(
+                    "Train Epoch: {} [{} / {}({:.0f}%)]\tTrain Loss: {:.6f}".format(
+                        self.epoch, batch_idx * len(data),
+                        len(train_loader.dataset),
+                        (100. * batch_idx / len(train_loader)),
+                        loss.item()
+                    ))
+
+            train_loss += loss.item()
+            prediction = output.max(1, keepdim=True)[1]
+            correct += prediction.eq(label.view_as(prediction)).sum().item()
+
+        train_loss /= (len(train_loader.dataset) / self.BATCH_SIZE)
+        train_accuracy = 100. * correct / len(train_loader.dataset)
+
+        valid_acc, valid_loss = self.evaluate(model, valid_loader)
+        if valid_loss > self.last_val_loss:
+            if self.non_improve_cnt > 5:
+                self.optimizer.param_groups[0]["lr"] = self.optimizer.param_groups[0]["lr"] * self.REDUCE_LR_RATE
+            self.non_improve_cnt += 1
+        else:
+            self.non_improve_cnt = 0
+
+        return train_accuracy, train_loss, valid_acc, valid_loss
+
+    def evaluate(self, model, test_loader):
+        model.eval()
+        test_loss = 0.
+        correct = 0.
+        with torch.no_grad():
+            for image, label in test_loader:
+                image = image.to(self.DEVICE)
+                label = label.to(self.DEVICE)
+                output = model(image)
+                test_loss += self.criterion(output, label).item()
+                prediction = output.max(1, keepdim=True)[1]
+                correct += prediction.eq(label.view_as(prediction)).sum().item()
+
+        test_loss /= (len(test_loader.dataset) / self.BATCH_SIZE)
+        test_accuracy = 100. * correct / len(test_loader.dataset)
+
+        return test_accuracy, test_loss
