@@ -11,6 +11,9 @@ import torch.nn.functional as F
 import torch
 import sys
 
+# For TensorFlow
+from tensorflow.keras import models, layers, activations, losses, optimizers, callbacks
+
 
 class DataModule:
     def __init__(self, audio_dir_path, batch_size):
@@ -307,3 +310,64 @@ class TrainModule:
         test_accuracy = 100. * correct / len(test_loader.dataset)
 
         return test_accuracy, test_loss
+
+
+class TrainModule2:
+    def __init__(self, input_shape, classes, batch_size):
+        self.BATCH_SIZE = batch_size
+        self.INPUT_SHAPE = input_shape
+        self.output_shape = classes
+
+    def conv2d_model(self):
+        model = models.Sequential([
+            layers.InputLayer(input_shape=self.INPUT_SHAPE),
+            layers.Conv2D(filters=64, kernel_size=(3, 3), activation=activations.relu, kernel_initializer="he_normal"),
+            layers.MaxPooling2D(),
+            layers.Conv2D(filters=128, kernel_size=(3, 3), activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Conv2D(filters=128, kernel_size=(3, 3), activation=activations.relu, kernel_initializer="he_normal"),
+            layers.MaxPooling2D(),
+            layers.Conv2D(filters=256, kernel_size=(3, 3), activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+
+            layers.Flatten(),
+
+            layers.Dense(512, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(256, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(128, activation=activations.relu, kernel_initializer="he_normal"),
+
+            layers.Dense(self.output_shape, activation=activations.softmax)
+        ])
+
+        model.compile(
+            optimizer=optimizers.Adam(),
+            loss=losses.categorical_crossentropy,
+            metrics=['acc']
+        )
+
+        return model
+
+    def model_training(self, model, x_train, y_train, x_valid, y_valid, epochs,
+                       early_stopping_patience, reduce_lr_rate,
+                       ckpt_path, log_dir_path, model_path):
+        callback = [
+            callbacks.EarlyStopping(patience=early_stopping_patience, verbose=1),
+            callbacks.ReduceLROnPlateau(factor=reduce_lr_rate, patience=5, verbose=1, min_lr=1e-3),
+            callbacks.ModelCheckpoint(filepath=ckpt_path, verbose=1, save_best_only=True, save_weights_only=True),
+            callbacks.TensorBoard(log_dir=log_dir_path)
+        ]
+        hist = model.fit(
+            x=x_train, y=y_train,
+            batch_size=self.BATCH_SIZE,
+            epochs=epochs,
+            verbose=1,
+            callbacks=callback,
+            validation_data=(x_valid, y_valid)
+        )
+
+        model.load_weights(filepath=ckpt_path)
+        model.save(filepath=model_path)
+
+        return hist
