@@ -33,7 +33,7 @@ tm = TrainModule(
     batch_size=BATCH_SIZE
 )
 
-model = tm.conv2d_model()
+model = tm.conv1d_model()
 model.summary()
 
 hist = tm.model_training(
