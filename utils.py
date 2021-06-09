@@ -74,6 +74,8 @@ class TrainModule:
             layers.InputLayer(input_shape=self.INPUT_SHAPE),
             layers.Flatten(),
 
+            layers.Dense(units=2048, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
             layers.Dense(units=1024, activation=activations.relu, kernel_initializer="he_normal"),
             layers.Dropout(rate=0.5),
             layers.Dense(units=512, activation=activations.relu, kernel_initializer="he_normal"),

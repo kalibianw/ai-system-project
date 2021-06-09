@@ -13,7 +13,7 @@ LOG_FOLDER_PATH = "./logs/training_fcnn/"
 if os.path.exists(LOG_FOLDER_PATH):
     shutil.rmtree(LOG_FOLDER_PATH)
     os.makedirs(LOG_FOLDER_PATH)
-EPOCHS = 100
+EPOCHS = 1000
 REDUCE_LR_RATE = 0.6
 LOG_INTERVAL = 100
 EARLY_STOPPING_PATIENCE = 15
