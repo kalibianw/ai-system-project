@@ -8,7 +8,7 @@ import os
 
 
 CKPT_PATH = "D:/AI/ckpt/ai-system-project/training_conv2d.ckpt"
-MODEL_PATH = "D:/AI/model/ai-system-project/training_conv2d_TF.h5"
+MODEL_PATH = "D:/AI/model/ai-system-project/training_conv2d.h5"
 LOG_FOLDER_PATH = "./logs/training_conv2d/"
 if os.path.exists(LOG_FOLDER_PATH):
     shutil.rmtree(LOG_FOLDER_PATH)

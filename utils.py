@@ -69,6 +69,41 @@ class TrainModule:
         self.INPUT_SHAPE = input_shape
         self.output_shape = classes
 
+    def conv1d_model(self):
+        model = models.Sequential([
+            layers.InputLayer(input_shape=self.INPUT_SHAPE),
+            layers.Conv1D(filters=128, kernel_size=5, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.MaxPooling1D(),
+
+            layers.Conv1D(filters=256, kernel_size=5, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+
+            layers.Conv1D(filters=256, kernel_size=5, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.MaxPooling1D(),
+
+            layers.Conv1D(filters=512, kernel_size=5, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+
+            layers.Flatten(),
+
+            layers.Dense(512, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(256, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(128, activation=activations.relu, kernel_initializer="he_normal"),
+
+            layers.Dense(self.output_shape, activation=activations.softmax)
+        ])
+
+        model.compile(
+            optimizer=optimizers.Adam(),
+            loss=losses.categorical_crossentropy,
+            metrics=['acc']
+        )
+
+        return model
+
     def conv2d_model(self):
         model = models.Sequential([
             layers.InputLayer(input_shape=self.INPUT_SHAPE),
