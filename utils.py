@@ -69,6 +69,29 @@ class TrainModule:
         self.INPUT_SHAPE = input_shape
         self.output_shape = classes
 
+    def fully_connected_model(self):
+        model = models.Sequential([
+            layers.InputLayer(input_shape=self.INPUT_SHAPE),
+            layers.Flatten(),
+
+            layers.Dense(units=1024, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(units=512, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(units=256, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dropout(rate=0.5),
+            layers.Dense(units=128, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dense(units=self.output_shape, activation=activations.relu, kernel_initializer="he_normal"),
+        ])
+
+        model.compile(
+            optimizer=optimizers.Adam(),
+            loss=losses.categorical_crossentropy,
+            metrics=["acc"]
+        )
+
+        return model
+
     def conv1d_model(self):
         model = models.Sequential([
             layers.InputLayer(input_shape=self.INPUT_SHAPE),
