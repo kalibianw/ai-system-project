@@ -4,7 +4,6 @@ import numpy as np
 import shutil
 import os
 
-
 CKPT_PATH = "D:/AI/ckpt/ai-system-project/training_fcnn.ckpt"
 MODEL_PATH = "D:/AI/model/ai-system-project/training_fcnn.h5"
 LOG_FOLDER_PATH = "./logs/training_fcnn/"

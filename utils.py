@@ -165,7 +165,7 @@ class TrainModule:
                        ckpt_path, log_dir_path, model_path):
         callback = [
             callbacks.EarlyStopping(patience=early_stopping_patience, verbose=1),
-            callbacks.ReduceLROnPlateau(factor=reduce_lr_rate, patience=5, verbose=1, min_lr=1e-3),
+            callbacks.ReduceLROnPlateau(factor=reduce_lr_rate, patience=5, verbose=1, min_lr=1e-5),
             callbacks.ModelCheckpoint(filepath=ckpt_path, verbose=1, save_best_only=True, save_weights_only=True),
             callbacks.TensorBoard(log_dir=log_dir_path)
         ]
