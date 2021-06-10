@@ -4,7 +4,6 @@ import numpy as np
 import shutil
 import os
 
-
 CKPT_PATH = "D:/AI/ckpt/ai-system-project/training_conv1d.ckpt"
 MODEL_PATH = "D:/AI/model/ai-system-project/training_conv1d.h5"
 LOG_FOLDER_PATH = "./logs/training_conv1d/"
@@ -18,11 +17,8 @@ EARLY_STOPPING_PATIENCE = 15
 BATCH_SIZE = 256
 
 nploader = np.load("npz/TFSR_n_mfcc_80_splited.npz")
-x_train, x_valid, x_test, y_train, y_valid, y_test = \
-    np.expand_dims(nploader["x_train"], axis=-1), \
-    np.expand_dims(nploader["x_valid"], axis=-1), \
-    np.expand_dims(nploader["x_test"], axis=-1), \
-    nploader["y_train"], nploader["y_valid"], nploader["y_test"]
+x_train, x_valid, x_test, y_train, y_valid, y_test = nploader["x_train"], nploader["x_valid"], nploader["x_test"], \
+                                                     nploader["y_train"], nploader["y_valid"], nploader["y_test"]
 print(np.shape(x_train), np.shape(x_valid), np.shape(x_test),
       np.shape(y_train), np.shape(y_valid), np.shape(y_test))
 
