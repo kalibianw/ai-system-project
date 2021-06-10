@@ -83,7 +83,7 @@ class TrainModule:
             layers.Dense(units=256, activation=activations.relu, kernel_initializer="he_normal"),
             layers.Dropout(rate=0.5),
             layers.Dense(units=128, activation=activations.relu, kernel_initializer="he_normal"),
-            layers.Dense(units=self.output_shape, activation=activations.relu, kernel_initializer="he_normal"),
+            layers.Dense(units=self.output_shape, activation=activations.softmax, kernel_initializer="he_normal"),
         ])
 
         model.compile(
